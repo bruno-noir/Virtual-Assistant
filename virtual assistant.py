@@ -1,92 +1,98 @@
-# filtering warnings : controls whether warnings are controlled or displayed
-
-import warnings  # warning module
-import pyttsx3  # text to speech conversion
-import speech_recognition as sr  # speech recognition module
-from gtts import gTTS
-import playsound
-import os
+#Import the below libraries.
+import subprocess
+import wolframalpha
+import pyttsx3 # text to speech conversion
+import tkinter
+import json
+import random
+import operator
+import speech_recognition as sr # speech recognition module
 import datetime
 import calendar
-import random
 import wikipedia
 import webbrowser
-import ctypes
+import os
 import winshell
-import subprocess
 import pyjokes
+import feedparser
 import smtplib
-import requests
-import json
-from twilio.rest import Client
-import wolframalpha
+import ctypes
 import time
+import requests
+import shutil
+from twilio.rest import Client
+from clint.textui import progress
+# from ecapture import ecapture as ec
+from bs4 import BeautifulSoup
+import win32com.client as wincl
+from urllib.request import urlopen
 
-warnings.filterwarnings("ignore")
-
-engine = pyttsx3.init()
-voices = engine.getProperty('voices')       #getting details of current voice
-#engine.setProperty('voice', voices[0].id)  #changing index, changes voices. o for male
-engine.setProperty('voice', voices[1].id)   #changing index, changes voices. 1 for female
-
-def talk(audio):
-    engine.say(audio)
-    engine.runAndWait()
-
-
-# talk("This is a test") #program will say this is a test while running
-
-# creating functions
-# function to take in audio and recognized the speech then return that speech as a string
-
-def rec_audio():
-    recog = sr.Recognizer()
-
-    with sr.Microphone() as source:  # we are using microphone as a source
-        print("Listening...")
-        audio = recog.listen(source)
-
-    data = " "
-
-    try:
-        data = recog.recognize_google(audio)
-        print("You said: " + data)
-
-    except sr.UnknownValueError:
-        print("Assistant could not understand the audio")
-
-    except sr.RequestError as ex:
-        print("Request Error from Google Speech Recognition" + ex)
-
-    return data
+#extras
+import playsound
+import winshell
 
 
-rec_audio() #testing the fun if it recognises our speech or not
+engine = pyttsx3.init('sapi5')
+voices = engine.getProperty('voices')
+engine.setProperty('voice', voices[1].id)
+#You can change the voice Id to “0” for the Male voice while using assistant here we are using a Female voice for all text to speech
 
-def response(text):
-    print(text)
+def speak(audio):
+	engine.say(audio)
+	engine.runAndWait()
 
-    tts = gTTS(text=text, lang="en")
+def wishMe():
+	hour = int(datetime.datetime.now().hour)
+	if hour>= 0 and hour<12:
+		speak("Good Morning Sir !")
 
-    audio = "Audio.mp3"
-    tts.save(audio)
+	elif hour>= 12 and hour<18:
+		speak("Good Afternoon Sir !")
 
-    playsound.playsound(audio)
+	else:
+		speak("Good Evening Sir !")
 
-    os.remove(audio)
+	assname =("Brian")
+	speak("I am your Assistant")
+	speak(assname)
+	
 
+def username():
+	speak("What should i call you sir")
+	uname = takeCommand()
+	speak("Welcome Mister")
+	speak(uname)
+	columns = shutil.get_terminal_size().columns
+	
+	print("#####################".center(columns))
+	print("Welcome Mr.", uname.center(columns))
+	print("#####################".center(columns))
+	
+	speak("How can i Help you, Sir")
 
-def call(text):
-    action_call = "Anya"
+def takeCommand():
+	
+	r = sr.Recognizer()
+	
+	with sr.Microphone() as source:
+		
+		print("Listening...")
+		r.pause_threshold = 1
+		audio = r.listen(source)
 
-    text = text.lower()
+	try:
+		print("Recognizing...")
+		query = r.recognize_google(audio, language ='en-in')
+		print(f"User said: {query}\n")
 
-    if action_call in text:
-        return True
+	except Exception as e:
+		print(e)
+		print("Unable to Recognize your voice.")
+		return "None"
+	
+	return query
 
-    return False
-
-
+#returns today_date
 def today_date():
     now = datetime.datetime.now()
     date_now = datetime.datetime.today()
@@ -144,8 +150,7 @@ def today_date():
     ]
 
     return f'Today is {week_now}, {months[month_now - 1]} the {ordinals[date_now - 1]}.'  # month start from 0 not 1
-
-
+#say hi or any greetings and the assistant will greet you
 def say_hello(text):
     greet = ["hi", "hola", "greetings", "wassup", "hello", "howdy", "what's good", "hey there", "kemcho"]
     response = ["hi", "hola", "greetings", "wassup", "hello", "howdy", "what's good", "hey there", "kemcho"]
@@ -155,15 +160,7 @@ def say_hello(text):
             return random.choice(response) + "."
 
         return ""
-
-
-def wiki_person(text):
-    list_wiki = text.split()
-    for i in range(0, len(list_wiki)):
-        if i + 3 <= len(list_wiki) - 1 and list_wiki[i].lower() == 'who' and list_wiki[i + 1].lower() == "is":
-            return list_wiki[i + 2] + " " + list_wiki[i + 3]
-
-
+    
 # function to take notes and save it
 def note(text):
     date = datetime.datetime.now()
@@ -172,292 +169,346 @@ def note(text):
         f.write(text)
 
     subprocess.Popen(["notepad.exe", file_name])
+def sendEmail(to, content):
+	server = smtplib.SMTP('smtp.gmail.com', 587)
+	server.ehlo()
+	server.starttls()
+	
+	# Enable low security in gmail
+	server.login('noirsky2x2x@gmail.com', 'Google08@')
+	server.sendmail('noirsky2x2x@gmail.com', to, content)
+	server.close()
+ 
+#Main Function starts here, we will now call all these functions in the main function.
 
+if __name__ == '__main__':
+	clear = lambda: os.system('cls')
+	
+	# This Function will clean any
+	# command before execution of this python file
+	clear()
+	wishMe()
+	username()
+	
+	while True:
+		
+		query = takeCommand().lower()
+		
+		# All the commands said by user will be
+		# stored here in 'query' and will be
+		# converted to lower case for easily
+		# recognition of command
+		if 'wikipedia' in query:
+			speak('Searching Wikipedia...')
+			query = query.replace("wikipedia", "")
+			results = wikipedia.summary(query, sentences = 3)
+			speak("According to Wikipedia")
+			print(results)
+			speak(results)
 
-# function to send emails
-# cuz less secure apps has no access to my email so it currently doesn't work
-def send_email(to, content):
-    server = smtplib.SMTP("smtp.gmail.com", 587)
-    server.ehlo()
-    server.starttls()
+		elif 'open youtube' in query:
+			speak("Here you go to Youtube\n")
+			webbrowser.open("youtube.com")
 
-    server.login("email", "password")
-    server.sendmail("email", to, content)
-    server.close()
+		elif 'open google' in query:
+			speak("Here you go to Google\n")
+			webbrowser.open("google.com")
 
+		elif 'open stackoverflow' in query:
+			speak("Here you go to Stack Over flow.Happy coding")
+			webbrowser.open("stackoverflow.com")
 
-while True:
+		elif 'play music' in query or "play song" in query:
+			speak("Here you go with music")
+			# music_dir = "G:\\Song"
+			music_dir = "C:\\Users\\GAURAV\\Music"
+			songs = os.listdir(music_dir)
+			print(songs)
+			random = os.startfile(os.path.join(music_dir, songs[1]))
 
-    try:
+		elif 'the time' in query:
+			strTime = datetime.datetime.now().strftime("% H:% M:% S")
+			speak(f"Sir, the time is {strTime}")
 
-        text = rec_audio()
-        speak = " "
+		elif 'open opera' in query:
+			codePath = r"C:\\Users\\GAURAV\\AppData\\Local\\Programs\\Opera\\launcher.exe"
+			os.startfile(codePath)
 
-        if call(text):
+		elif 'email to gaurav' in query:
+			try:
+				speak("What should I say?")
+				content = takeCommand()
+				to = "Receiver email address"
+				sendEmail(to, content)
+				speak("Email has been sent !")
+			except Exception as e:
+				print(e)
+				speak("I am not able to send this email")
 
-            speak = speak + say_hello(text)
+		elif 'send a mail' in query:
+			try:
+				speak("What should I say?")
+				content = takeCommand()
+				speak("whome should i send")
+				to = input()
+				sendEmail(to, content)
+				speak("Email has been sent !")
+			except Exception as e:
+				print(e)
+				speak("I am not able to send this email")
 
-            if "date" in text or "day" in text or "month" in text:
-                get_today = today_date()
-                speak = speak + " " + get_today
+		elif 'how are you' in query:
+			speak("I am fine, Thank you")
+			speak("How are you, Sir")
 
-            elif "time" in text:
-                now = datetime.datetime.now()
-                meridiem = ""
-                if now.hour >= 12:
-                    meridiem = "p.m"
-                    hour = now.hour - 12
-                else:
-                    meridiem = "a.m"
-                    hour = now.hour
+		elif 'fine' in query or "good" in query:
+			speak("It's good to know that your fine")
 
-                if now.minute < 10:
-                    minute = "0" + str(now.minute)
-                else:
-                    minute = str(now.minute)
-                speak = speak + " " + "It is " + str(hour) + ":" + minute + " " + meridiem + " ."
+		elif "change my name to" in query:
+			query = query.replace("change my name to", "")
+			assname = query
 
-            elif "wikipedia" in text or "Wikipedia" in text:
-                if "who is" in text:
-                    person = wiki_person(text)
-                    wiki = wikipedia.summary(person, sentences=2)  # say 2 lines about the person
-                    speak = speak + " " + wiki
-             # answer to general questions
-            elif "wdo are you" in text or "define yourself" in text:
-                speak = speak + """Hello, I am Anya. Your Anya. I am here to help you my master. Well, You can command me to perform various tasks such as solving mathematical questions or opening application etcetera"""
-            elif "your name" in text:
-                speak = speak + "my name is anya"
-            elif "who am I" in text:
-                speak = speak + "my master"
-            elif "why do you exist" in text or "why did you come" in text:
-                speak = speak + "It is a secret"
-            elif "how are you" in text:
-                speak = speak + "I am fine, thank you"
-                speak = speak + "\nHow are you?"
-            elif "fine" in text or "good" in text:
-                speak = speak + "It's good to know that you are doing fine"
-            # opening applications and website
-            elif "open" in text.lower():
-                # opening applications
-                if "firefox" in text.lower():
-                    speak = speak + "Opening Firefox"
-                    os.startfile(
-                        r"C:\Program Files\Mozilla Firefox\firefox.exe"
-                        # r cuz python does not allow us to use back slash within string
-                    )  # location of the file
-                elif "wordpad" in text.lower():
-                    speak = speak + "Opening wordpad"
-                    os.startfile(
-                        r"%ProgramFiles%\Windows NT\Accessories\wordpad.exe"
-                    )
-                elif "vs code" in text.lower():
-                    speak = speak + "Opening Visual Studio Code"
-                    os.startfile(
-                        r"C:\Users\praty\AppData\Local\Programs\Microsoft VS Code\Code.exe"
-                    )
-                elif "photoshop" in text.lower():
-                    speak = speak + "Opening Adobe Photoshop"
-                    os.startfile(
-                        r"C:\Program Files\Adobe\Adobe Photoshop 2021\Photoshop.exe"
-                    )
-                elif "figma" in text.lower():
-                    speak = speak + "Opening figma"
-                    os.startfile(
-                        r"C:\Users\praty\AppData\Local\Figma\Figma.exe"
-                    )
-                # opening websites
-                elif "youtube" in text.lower():
-                    speak = speak + "Opening youtube"
-                    webbrowser.open("https://youtube.com/")
-                elif "google" in text.lower():
-                    speak = speak + "Opening Google"
-                    webbrowser.open("https://google.com/")
-                elif "stackoverflow" in text.lower:
-                    speak = speak + "Opening StackOverFlow"
-                    webbrowser.open("https://stackoverflow.com/")
-                elif "facebook" in text.lower():
-                    speak = speak + "Opening facebook"
-                    webbrowser.open("https://facebook.com/")
-                elif "instagram" in text.lower():
-                    speak = speak + "Opening instagram"
-                    webbrowser.open("https://instagram.com/")
-                else:
-                    speak = speak + "Application not availabel"
+		elif "change name" in query:
+			speak("What would you like to call me, Sir ")
+			assname = takeCommand()
+			speak("Thanks for naming me")
 
-            # search on youtube and google
-            elif "youtube" in text.lower():
-                ind = text.lower().split().index("youtube")
-                search = text.split()[ind + 1:]
-                webbrowser.open(
-                    "http://www.youtube.com/results?search_query=" + "+".join(search)
-                )
-                speak = speak + "Opening " + str(search) + " on youtube"
-            elif "search" in text.lower():
-                ind = text.lower().split().index("search")
-                search = text.split()[ind + 1:]
-                webbrowser.open(
-                    "http://www.google.com/search?q=" + "+".join(search)
-                )
-                speak = speak + "Searching " + str(search) + " on google"
-            elif "google" in text.lower():
-                ind = text.lower().split().index("google")
-                search = text.split()[ind + 1:]
-                webbrowser.open(
-                    "http://www.google.com/search?q=" + "+".join(search)
-                )
-                speak = speak + "Searching " + str(search) + " on google"
-            # working with operating system
-            elif "change background" in text or "change wallpaper" in text:
-                img = r'C:\Users\praty\OneDrive\Pictures'
-                list_img = os.listdir(img)
-                imgChoice = random.choice(list_img)
-                randomImg = os.path.join(img, imgChoice)
-                ctypes.windll.user32.SystemParameterInfoW(20, 0, randomImg, 0)
-                speak = speak + "BAckground changed successfully"
+		elif "what's your name" in query or "What is your name" in query:
+			speak("My friends call me")
+			speak(assname)
+			print("My friends call me", assname)
 
-            elif "play music" in text or "play song" in text:
-                talk("Here you go with music")
-                music_dir = r'C:\Resources\projects\Music player'
-                songs = os.listdir(music_dir)
-                d = random.choice(music_dir)
-                random = os.path.join(music_dir, d)
-                playsound.playsound(random)
+		elif 'exit' in query:
+			speak("Thanks for giving me your time")
+			exit()
 
-            elif "empty recycle bin" in text:
-                winshell.recycle_bin().empty(
-                    confirm=True, show_progress=False, sound=True
-                )
-                speak = speak + "recycle bin emptied"
-            # tell some python jokes and making notes
-            elif "note" in text or "remember this" in text:
-                talk("What would you like me to write down?")
-                note_text = rec_audio()
-                note(note_text)
-                speak = speak + "I have made a note of that"
-            elif "jokes" in text or "joke" in text:
-                speak = speak + pyjokes.get_joke()
+		elif "who made you" in query or "who created you" in query:
+			speak("I have been created by Gaurav.")
+			
+		elif 'joke' in query:
+			speak(pyjokes.get_joke())
+			
+		elif "calculate" in query:
+			
+			app_id = "Wolframalpha api id"
+			client = wolframalpha.Client(app_id)
+			indx = query.lower().split().index('calculate')
+			query = query.split()[indx + 1:]
+			res = client.query(' '.join(query))
+			answer = next(res.results).text
+			print("The answer is " + answer)
+			speak("The answer is " + answer)
 
-            # working with google maps
-            elif "where is" in text:
-                ind = text.lower().split().index("is")
-                location = text.split()[ind + 1:]
-                url = "https://www.google.com/maps/place/" + "".join(location)
-                speak = speak + "This is where " + str(location) + " is."
-            # sending email
-            elif "email to computer" in text or "gmail to computer" in text:
-                try:
-                    talk("What should I say?")
-                    content = rec_audio()
-                    to = "Reciever email address"
-                    send_email(to, content)
-                    speak = speak + "Email has been sent!"
-                except Exception as e:
-                    print(e)
-                    talk("I am not able to send this email")
+		elif 'search' in query or 'play' in query:
+			
+			query = query.replace("search", "")
+			query = query.replace("play", "")		
+			webbrowser.open(query)
 
-            elif "mail" in text or "email" in text or "gmail" in text:
-                try:
-                    talk("What should I send")
-                    content = rec_audio()
-                    to = input("Enter to address: ")
-                    send_email(to, content)
-                    speak = speak + "Email has been sent!"
-                except Exception as e:
-                    print(e)
-                    talk("I am not able to send this email")
+		elif "who i am" in query:
+			speak("If you talk then definitely your human.")
 
-            # weather api
-            elif "weather" in text:
-                key = "7cffc6c8afde09dbd82e42bf969aab71"
-                weather_url = "http://api.openweathermap.org/data/2.5/weather?"
-                ind = text.split().index("in")
-                location = text.split()[ind + 1:]
-                location = "".join(location)
-                url = weather_url + "appid=" + key + "&q=" + location
-                js = requests.get(url).json()
-                if js["cod"] != "404":
-                    weather = js["main"]
-                    temperature = weather["temp"]
-                    temperature = temperature - 273.15
-                    humidity = weather["humidity"]
-                    desc = js["weather"][0]["description"]
-                    weather_response = "The temperature in Celcius is " + str(temperature) + "The humidity is" + str(humidity) + "and weather description is " + str(desc)
+		elif "why you came to world" in query:
+			speak("Thanks to Gaurav. further It's a secret")
 
-                    speak = speak + weather_response
-                else:
-                    speak = speak + "City not found"
+		elif 'power point presentation' in query:
+			speak("opening Power Point presentation")
+			power = r"C:\\Users\\GAURAV\\Desktop\\Minor Project\\Presentation\\Voice Assistant.pptx"
+			os.startfile(power)
 
-            # to get latest news
-            elif "news" in text:
-                url = ('https://newsapi.org/v2/everything?'
-                       'q=Apple&'
-                       'from=2022-06-26&'
-                       'sortBy=popularity&'
-                       'apiKey=b301986ff17a48329b2cfcb2a3b2be71')
-                try:
-                    response = requests.get(url)
-                except:
-                    talk("Please check your connection")
+		elif 'is love' in query:
+			speak("It is 7th sense that destroy all other senses")
 
-                news = json.loads(response.text)
+		elif "who are you" in query:
+			speak("I am your virtual assistant created by Gaurav")
 
-                for new in news["articles"]:
-                    print(str(new["title"]), "\n")
-                    talk(str(new["title"]))
-                    engine.runAndWait()
+		elif 'reason for you' in query:
+			speak("I was created as a Minor project by Mister Gaurav ")
 
-                    print(str(new["description"]), "\n")
-                    talk(str(new["description"]))
-                    engine.runAndWait()
-            #to send message using twilio api
-            elif "send message" in text or "send a message" in text:
-                account_sid = "AC3f14527de11891f292b23f18eccc3b38"
-                auth_token = "76626582539554d3590891cc250757a4"
-                client = Client(account_sid, auth_token)
+		elif 'change background' in query:
+			ctypes.windll.user32.SystemParametersInfoW(20,
+													0,
+													"Location of wallpaper",
+													0)
+			speak("Background changed successfully")
 
-                talk("What should i send")
-                message = client.messages.create(
-                    body=rec_audio(), from_="+19705784869", to="+918102151582"
-                )
+		elif 'open bluestack' in query:
+			appli = r"C:\\ProgramData\\BlueStacks\\Client\\Bluestacks.exe"
+			os.startfile(appli)
 
-                print(message.sid)
-                speak = speak + "Message sent successfully"
-                #its not complete
+		elif 'news' in query:
+			
+			try:
+				jsonObj = urlopen('''https://newsapi.org / v1 / articles?source = the-times-of-india&sortBy = top&apiKey =\\times of India Api key\\''')
+				data = json.load(jsonObj)
+				i = 1
+				
+				speak('here are some top news from the times of india')
+				print('''=============== TIMES OF INDIA ============'''+ '\n')
+				
+				for item in data['articles']:
+					
+					print(str(i) + '. ' + item['title'] + '\n')
+					print(item['description'] + '\n')
+					speak(str(i) + '. ' + item['title'] + '\n')
+					i += 1
+			except Exception as e:
+				
+				print(str(e))
 
-            #wolframalpha to answer technical questions
-            elif "calculate" in text:
-                app_id = "UHWLXA-3V7H6RERP8"
-                client = wolframalpha.Client(app_id)
-                ind = text.lower().split().index("calculate")
-                res = client.query(" ".join(text))
-                answer = next(res.results).text
-                speak = speak + "The answer is " + answer
+		
+		elif 'lock window' in query:
+				speak("locking the device")
+				ctypes.windll.user32.LockWorkStation()
 
-            elif "what is" in text or "who is" in text:
-                app_id = "UHWLXA-3V7H6RERP8"
-                client = wolframalpha.Client(app_id)
-                ind = text.lower().split().index("is")
-                res = client.query(" ".join(text))
-                answer = next(res.results).text
-                speak = speak + "The answer is " + answer
+		elif 'shutdown system' in query:
+				speak("Hold On a Sec ! Your system is on its way to shut down")
+				subprocess.call('shutdown / p /f')
+				
+		elif 'empty recycle bin' in query:
+			winshell.recycle_bin().empty(confirm = False, show_progress = False, sound = True)
+			speak("Recycle Bin Recycled")
 
-            #temporary and permanant exit
-            elif "don't listen" in text or "stop listening" in text or "do not listen" in text:
-                talk("for how many seconds do you want me to sleep")
-                a = int(rec_audio())
-                time.sleep(a)
-                speak = speak + str(a) + " seconds completed, Now you can ask me anything"
+		elif "don't listen" in query or "stop listening" in query:
+			speak("for how much time you want to stop jarvis from listening commands")
+			a = int(takeCommand())
+			time.sleep(a)
+			print(a)
 
-            elif "exit" in text or "quit" in text:
-                exit()
+		elif "where is" in query:
+			query = query.replace("where is", "")
+			location = query
+			speak("User asked to Locate")
+			speak(location)
+			webbrowser.open("https://www.google.nl / maps / place/" + location + "")
 
-            response(speak)
+		# elif "camera" in query or "take a photo" in query:
+		# 	ec.capture(0, "Jarvis Camera ", "img.jpg")
 
+		elif "restart" in query:
+			subprocess.call(["shutdown", "/r"])
+			
+		elif "hibernate" in query or "sleep" in query:
+			speak("Hibernating")
+			subprocess.call("shutdown / h")
 
-    except:
-        talk("I don't know that")
+		elif "log off" in query or "sign out" in query:
+			speak("Make sure all the application are closed before sign-out")
+			time.sleep(5)
+			subprocess.call(["shutdown", "/l"])
 
-#calender api left to do
-#twilio api to send messages
-#can add more features in wolframalpha
-#temporary or permanant exit from the program
+		elif "write a note" in query:
+			speak("What should i write, sir")
+			note = takeCommand()
+			file = open('jarvis.txt', 'w')
+			speak("Sir, Should i include date and time")
+			snfm = takeCommand()
+			if 'yes' in snfm or 'sure' in snfm:
+				strTime = datetime.datetime.now().strftime("% H:% M:% S")
+				file.write(strTime)
+				file.write(" :- ")
+				file.write(note)
+			else:
+				file.write(note)
+		
+		elif "show note" in query:
+			speak("Showing Notes")
+			file = open("jarvis.txt", "r")
+			print(file.read())
+			speak(file.read(6))
+
+		elif "update assistant" in query:
+			speak("After downloading file please replace this file with the downloaded one")
+			url = '# url after uploading file'
+			r = requests.get(url, stream = True)
+			
+			with open("Voice.py", "wb") as Pypdf:
+				
+				total_length = int(r.headers.get('content-length'))
+				
+				for ch in progress.bar(r.iter_content(chunk_size = 2391975),
+									expected_size =(total_length / 1024) + 1):
+					if ch:
+					    Pypdf.write(ch)
+					
+		# NPPR9-FWDCX-D2C8J-H872K-2YT43
+		# elif "jarvis" in query:
+			
+		# 	wishMe()
+		# 	speak("Brian 1 point o in your service Mister")
+		# 	speak(assname)
+
+		# elif "weather" in query:
+			
+		# 	# Google Open weather website
+		# 	# to get API of Open weather
+		# 	api_key = "Api key"
+		# 	base_url = "http://api.openweathermap.org / data / 2.5 / weather?"
+		# 	speak(" City name ")
+		# 	print("City name : ")
+		# 	city_name = takeCommand()
+		# 	complete_url = base_url + "appid =" + api_key + "&q =" + city_name
+		# 	response = requests.get(complete_url)
+		# 	x = response.json()
+			
+		# 	if x["cod"] != "404":
+		# 		y = x["main"]
+		# 		current_temperature = y["temp"]
+		# 		current_pressure = y["pressure"]
+		# 		current_humidiy = y["humidity"]
+		# 		z = x["weather"]
+		# 		weather_description = z[0]["description"]
+		# 		print(" Temperature (in kelvin unit) = " +str(current_temperature)+"\n atmospheric pressure (in hPa unit) ="+str(current_pressure) +"\n humidity (in percentage) = " +str(current_humidiy) +"\n description = " +str(weather_description))
+			
+		# 	else:
+		# 		speak(" City Not Found ")
+			
+		# elif "send message " in query:
+		# 		# You need to create an account on Twilio to use this service
+		# 		account_sid = 'Account Sid key'
+		# 		auth_token = 'Auth token'
+		# 		client = Client(account_sid, auth_token)
+
+		# 		message = client.messages \
+		# 						.create(
+		# 							body = takeCommand(),
+		# 							from_='Sender No',
+		# 							to ='Receiver No'
+		# 						)
+
+		# 		print(message.sid)
+
+		# elif "wikipedia" in query:
+		# 	webbrowser.open("wikipedia.com")
+
+		# elif "Good Morning" in query:
+		# 	speak("A warm" +query)
+		# 	speak("How are you Mister")
+		# 	speak(assname)
+
+		# # most asked question from google Assistant
+		# elif "will you be my gf" in query or "will you be my bf" in query:
+		# 	speak("I'm not sure about, may be you should give me some time")
+
+		# elif "how are you" in query:
+		# 	speak("I'm fine, glad you me that")
+
+		# elif "i love you" in query:
+		# 	speak("It's hard to understand")
+
+		# elif "what is" in query or "who is" in query:
+			
+		# 	# Use the same API key
+		# 	# that we have generated earlier
+		# 	client = wolframalpha.Client("API_ID")
+		# 	res = client.query(query)
+			
+		# 	try:
+		# 		print (next(res.results).text)
+		# 		speak (next(res.results).text)
+		# 	except StopIteration:
+		# 		print ("No results")
+
+		# # elif "" in query:
+		# 	# Command go here
+		# 	# For adding more commands
